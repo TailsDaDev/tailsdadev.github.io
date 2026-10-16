@@ -138,6 +138,30 @@
     * { transition: none !important; }
   }
 
+  /* ---------- Loading screen ---------- */
+  #loadingScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0b1f33;
+    color: #fff;
+    font-size: 2.2rem;
+    letter-spacing: .05em;
+    transition: opacity .4s ease;
+  }
+
+  #loadingScreen.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  body.is-loading {
+    overflow: hidden;
+  }
+
   /* ---------- Music player ---------- */
   .music-player {
     position: fixed;
@@ -318,7 +342,9 @@
   }
 </style>
 </head>
-<body>
+<body class="is-loading">
+  <div id="loadingScreen">Loading..</div>
+
   <main class="page">
 
     <a class="project p1" href="#" aria-label="Project 1" data-code="codes/code1.txt">
@@ -389,6 +415,13 @@
   </div>
 
   <script>
+    window.addEventListener('load', () => {
+      const loadingScreen = document.getElementById('loadingScreen');
+      document.body.classList.remove('is-loading');
+      loadingScreen.classList.add('hidden');
+      setTimeout(() => { loadingScreen.remove(); }, 500);
+    });
+
     const codeOverlay = document.getElementById('codeOverlay');
     const codeContent = document.getElementById('codeContent');
     const codeTitle = document.getElementById('codeTitle');
