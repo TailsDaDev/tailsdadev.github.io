@@ -1,0 +1,113 @@
+// =================================================================
+// CONFIGURATION VARIABLES: Customize restrictions & presets here
+// =================================================================
+
+// 1. Permission Lock Settings
+const ADMIN_ONLY = true; // Set to true for admins only, false for everyone
+const ADMIN_LIST = ["YourUsername", "AdminFriend1"]; // List of admin usernames
+
+// 2. Available Avatar Transformation Presets
+const AVATAR_PRESETS = {
+    "zombie": {
+        skinName: "zombie",
+        pose: "zombie",
+        scale: { "HeadMesh": [1.0, 1.0, 1.0] }
+    },
+    "wizard": {
+        skinName: "wizard",
+        pose: "driving", 
+        scale: { "HeadMesh": [1.0, 1.0, 1.0] }
+    },
+    "giant": {
+        skinName: "bob",
+        pose: "none",
+        scale: { 
+            "HeadMesh": [2.0, 2.0, 2.0],
+            "TorsoNode": [2.0, 2.0, 2.0],
+            "LeftArm": [2.0, 2.0, 2.0],
+            "RightArm": [2.0, 2.0, 2.0]
+        }
+    },
+    "chibi": {
+        skinName: "emma",
+        pose: "none",
+        scale: { 
+            "HeadMesh": [0.6, 0.6, 0.6],
+            "TorsoNode": [0.5, 0.5, 0.5],
+            "LeftArm": [0.5, 0.5, 0.5],
+            "RightArm": [0.5, 0.5, 0.5]
+        }
+    }
+};
+
+const FEEDBACK_COLOR = "yellow";
+const ERROR_COLOR = "red";
+
+// =================================================================
+// CORE LOGIC: Validates message permissions and switches models
+// =================================================================
+
+api.onChatMessage((playerId, message) => {
+    const msgText = message.trim().toLowerCase();
+
+    // Check if the chat message starts with our command variable
+    if (msgText.startsWith(";avatar ")) {
+        const username = api.getEntityName(playerId);
+
+        // 1. Check permissions if ADMIN_ONLY is active
+        if (ADMIN_ONLY) {
+            const isAdmin = ADMIN_LIST.includes(username);
+            if (!isAdmin) {
+                api.broadcastChatMessage({
+                    content: [{ str: `🛑 Access Denied: This command is restricted to administrators.`, style: { color: ERROR_COLOR, bold: true } }]
+                });
+                return; // Stop the execution here
+            }
+        }
+
+        // 2. Extract the preset keyword typed after the command
+        const selectedPreset = msgText.replace(";avatar ", "").trim();
+
+        // 3. Verify if the typed preset exists in our configuration mapping
+        if (AVATAR_PRESETS[selectedPreset]) {
+            const config = AVATAR_PRESETS[selectedPreset];
+
+            // Reset any previous mesh scalings to standard defaults first
+            const defaultScale = [1.0, 1.0, 1.0];
+            const nodes = ["HeadMesh", "TorsoNode", "LeftArm", "RightArm", "LeftLeg", "RightLeg"];
+            for (const node of nodes) {
+                api.scalePlayerMeshNodes(playerId, node, defaultScale, defaultScale, defaultScale);
+            }
+
+            // Apply New Skin Texture
+            api.changePlayerIntoSkin(playerId, "head", config.skinName);
+
+            // Apply New Pose
+            if (config.pose && config.pose !== "none") {
+                api.setPlayerPose(playerId, config.pose);
+            } else {
+                api.setPlayerPose(playerId, ""); 
+            }
+
+            // Apply New Mesh Node Scaling
+            if (config.scale) {
+                for (const nodeName in config.scale) {
+                    const vec = config.scale[nodeName];
+                    api.scalePlayerMeshNodes(playerId, nodeName, vec, vec, vec);
+                }
+            }
+
+            // Confirm change to the server
+            api.broadcastChatMessage({
+                content: [{ str: `✨ [AVATAR]: ${username} transformed into a ${selectedPreset}!`, style: { color: FEEDBACK_COLOR, bold: true } }]
+            });
+
+        } else {
+            // Error handling if they type a preset that doesn't exist
+            api.broadcastChatMessage({
+                content: [{ str: `🛑 Unknown preset "${selectedPreset}". Available: zombie, wizard, giant, chibi.`, style: { color: ERROR_COLOR } }]
+            });
+        }
+    }
+});
+

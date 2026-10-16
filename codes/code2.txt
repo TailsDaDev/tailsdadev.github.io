@@ -1,0 +1,76 @@
+// =================================================================
+// CONFIGURATION VARIABLES: Customize your decoding styles here
+// =================================================================
+
+// 1. Text Style Options
+const MSG_TEXT_COLOR = "lime";   // Terminal green
+const MSG_IS_BOLD = true;        // Keep bold for maximum visibility
+const ANIMATION_SPEED = 150;     // Time between character reveals in milliseconds (0.15s)
+
+// 2. The Base Layout (What wraps around the scrambled text)
+const LOBBY_PREFIX = "----";
+const LOBBY_SUFFIX = "------";
+
+// 3. Exhaustive pool of pure gooblydegook text symbols (No emojis)
+const SCRAMBLE_SYMBOLS = [
+    "@", "(", "£", "+", "§", "&", "%", "#", "Ω", "Δ", "?", "!", "\$", 
+    "*", "€", "¥", "₹", "₱", "₭", "₮", "×", "÷", "≠", "∞", "±", "≤", "≥", "∑", 
+    "∏", "√", "∝", "∞", "∠", "∧", "∨", "∩", "∪", "∫", "∬", "∭", "∮", "∯", "∰", 
+    "ℵ", "ℶ", "ℷ", "ℸ", "ⅎ", "⅍", "⅌", "⅋", "⅊", "ⅉ", "ⅈ", "ⅇ", "ⅆ", "ⅅ", "⅄", 
+    "½", "⅓", "¼", "⅕", "⅙", "⅛", "⅔", "⅖", "¾", "⅗", "⅘", "⅚", "⅜", "⅝", "⅞",
+    "░", "▒", "▓", "█", "▄", "▀", "■", "□", "▲", "▼", "◆", "◇", "○", "◎", "●"
+];
+
+// =================================================================
+// CORE LOGIC: Dynamically decodes the name letter-by-letter
+// =================================================================
+
+api.onPlayerJoin((playerId) => {
+    // Get the player's actual name
+    const username = api.getEntityName(playerId);
+    const nameLength = username.length;
+    
+    let revealedCount = 0;
+
+    // Start a timer to handle the step-by-step frame generation
+    const decodingInterval = setInterval(() => {
+        // Stop the interval once the entire name is fully revealed
+        if (revealedCount > nameLength) {
+            clearInterval(decodingInterval);
+            return;
+        }
+
+        let animatedName = "";
+
+        // Loop through each character position of the name to build the current frame
+        for (let i = 0; i < nameLength; i++) {
+            if (i < revealedCount) {
+                // If this position has been mastered/decoded, show the real letter
+                animatedName += username[i];
+            } else {
+                // If it is still locked, pull a random gooblydegook symbol
+                const randomSymbol = SCRAMBLE_SYMBOLS[Math.floor(Math.random() * SCRAMBLE_SYMBOLS.length)];
+                animatedName += randomSymbol;
+            }
+        }
+
+        // Combine the custom outer framework with the currently animated string
+        const finalFrameText = `${LOBBY_PREFIX}${animatedName}${LOBBY_SUFFIX}`;
+
+        // Send this exact snapshot to the server chat
+        api.broadcastChatMessage({
+            content: [
+                { 
+                    str: finalFrameText, 
+                    style: { 
+                        color: MSG_TEXT_COLOR, 
+                        bold: MSG_IS_BOLD 
+                    } 
+                }
+            ]
+        });
+
+        // Advance the counter to unlock the next character index on the next loop
+        revealedCount++;
+    }, ANIMATION_SPEED);
+});

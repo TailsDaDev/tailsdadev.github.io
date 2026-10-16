@@ -183,21 +183,85 @@
     opacity: .75;
     padding: 1rem 1rem 6.5rem;
   }
+
+  /* ---------- Code viewer modal ---------- */
+  .code-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, .6);
+  }
+
+  .code-overlay.open { display: flex; }
+
+  .code-box {
+    width: 100%;
+    max-width: 780px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #0b1f33;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+  }
+
+  .code-box-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .8rem 1.2rem;
+    background: var(--blue-deep);
+  }
+
+  .code-box-header span {
+    color: #fff;
+    font-size: 1.3rem;
+  }
+
+  .code-close {
+    border: none;
+    background: #fff;
+    color: var(--blue-deep);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .code-box pre {
+    margin: 0;
+    padding: 1.2rem;
+    overflow: auto;
+    color: #d8e8f5;
+    font-family: "Courier New", monospace;
+    font-size: 1rem;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
 </style>
 </head>
 <body>
   <main class="page">
 
-    <a class="project p1" href="#" aria-label="Project 1">
+    <a class="project p1" href="#" aria-label="Project 1" data-code="codes/code1.txt">
       <img src="images/project1.png" alt="Project 1">
     </a>
-    <a class="project p2" href="#" aria-label="Project 2">
+    <a class="project p2" href="#" aria-label="Project 2" data-code="codes/code2.txt">
       <img src="images/project2.png" alt="Project 2">
     </a>
-    <a class="project p3" href="#" aria-label="Project 3">
+    <a class="project p3" href="#" aria-label="Project 3" data-code="codes/code3.txt">
       <img src="images/project3.png" alt="Project 3">
     </a>
-    <a class="project p4" href="#" aria-label="Project 4">
+    <a class="project p4" href="#" aria-label="Project 4" data-code="codes/code4.txt">
       <img src="images/project4.png" alt="Project 4">
     </a>
 
@@ -227,7 +291,47 @@
   </div>
   <audio id="bgMusic" src="song.mp3" loop></audio>
 
+  <div class="code-overlay" id="codeOverlay">
+    <div class="code-box">
+      <div class="code-box-header">
+        <span id="codeTitle">Code</span>
+        <button class="code-close" id="codeClose" aria-label="Close" type="button">&#10005;</button>
+      </div>
+      <pre id="codeContent">Loading...</pre>
+    </div>
+  </div>
+
   <script>
+    const codeOverlay = document.getElementById('codeOverlay');
+    const codeContent = document.getElementById('codeContent');
+    const codeTitle = document.getElementById('codeTitle');
+    const codeClose = document.getElementById('codeClose');
+
+    document.querySelectorAll('.project[data-code]').forEach((link, i) => {
+      link.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const path = link.getAttribute('data-code');
+        codeTitle.textContent = 'Project ' + (i + 1);
+        codeContent.textContent = 'Loading...';
+        codeOverlay.classList.add('open');
+        try {
+          const res = await fetch(path);
+          if (!res.ok) throw new Error('not found');
+          codeContent.textContent = await res.text();
+        } catch (err) {
+          codeContent.textContent = 'Could not load ' + path + '. Make sure the file exists.';
+        }
+      });
+    });
+
+    function closeCodeViewer() {
+      codeOverlay.classList.remove('open');
+    }
+    codeClose.addEventListener('click', closeCodeViewer);
+    codeOverlay.addEventListener('click', (e) => {
+      if (e.target === codeOverlay) closeCodeViewer();
+    });
+
     const audio = document.getElementById('bgMusic');
     const toggle = document.getElementById('musicToggle');
     const label = document.getElementById('musicLabel');

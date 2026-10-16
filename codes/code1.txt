@@ -1,0 +1,69 @@
+
+
+// THIS IS THE CODE FOR CUSTOM NAMETAGS!
+
+
+
+// ==========================================
+// CONFIGURATION: Customize your players here
+// ==========================================
+const PLAYER_CONFIG = {
+    "OWNER-NAME-HERE": {
+        nameTag: "👑 OWNER",
+        nameColor: "gold",
+        subtitle: "Server Creator",
+        subColor: "yellow",
+        bgColor: "#1a0033" // Dark Purple
+    },
+  // Copy and paste this if needing more 
+    "ADMIN-GUY": {
+        nameTag: "👨‍💻Coder",
+        nameColor: "aqua",
+        subtitle: "Coder",
+        subColor: "lime",
+        bgColor: "#0d0d0d" // Off-black
+    },
+    // Ends here
+    "NAME": {
+        nameTag: "👨‍💻 Coder",
+        nameColor: "red",
+        subtitle: "Moderator",
+        subColor: "orange",
+        bgColor: "#260d0d" // Dark Red
+    }
+};
+
+// ==========================================
+// CORE LOGIC: Applies settings automatically
+// ==========================================
+api.onPlayerJoin((playerId) => {
+    // Get the player's actual account username
+    const username = api.getEntityName(playerId);
+
+    // Check if this player has custom settings configured above
+    if (PLAYER_CONFIG[username]) {
+        const config = PLAYER_CONFIG[username];
+
+        api.setTargetedPlayerSettingForEveryone(playerId, "nameTagInfo", {
+            content: [
+                { str: config.nameTag, style: { color: config.nameColor, bold: true } }
+            ],
+            subtitle: [
+                { str: config.subtitle, style: { color: config.subColor } }
+            ],
+            backgroundColor: config.bgColor
+        }, true);
+    } else {
+        // DEFAULT SETTING: For players not in the list
+        api.setTargetedPlayerSettingForEveryone(playerId, "nameTagInfo", {
+            content: [
+                { str: username, style: { color: "white" } }
+            ],
+            subtitle: [
+                { str: "Guest", style: { color: "gray" } }
+            ],
+            backgroundColor: "#131629" // Standard blue-grey
+        }, true);
+    }
+});
+

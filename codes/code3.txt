@@ -1,0 +1,59 @@
+// =================================================================
+// CONFIGURATION VARIABLES: Set your server admins here
+// =================================================================
+
+// Add the exact usernames of your server administrators inside this list
+const ADMIN_LIST = ["YourUsername", "AdminFriend1", "AdminFriend2"];
+
+// Custom chat notification styling
+const COMMAND_COLOR = "aqua";
+const ERROR_COLOR = "red";
+const IS_BOLD = true;
+
+// =================================================================
+// CORE LOGIC: Validates players and executes gamemode changes
+// =================================================================
+
+api.onChatMessage((playerId, message) => {
+    // Get the clean text message and strip any trailing/leading spaces
+    const msgText = message.trim().toLowerCase();
+    
+    // Check if the typed message matches our gamemode commands
+    if (msgText === ";s" || msgText === ";survival" || msgText === ";c" || msgText === ";creative") {
+        
+        // Fetch the username of the player who typed the command
+        const username = api.getEntityName(playerId);
+        
+        // Verify if the player is in the Admin list
+        const isAdmin = ADMIN_LIST.includes(username);
+
+        if (!isAdmin) {
+            // Reject non-admins with a private notification or server warn
+            api.broadcastChatMessage({
+                content: [{ str: `🛑 Access Denied: You are not an administrator.`, style: { color: ERROR_COLOR, bold: IS_BOLD } }]
+            });
+            return;
+        }
+
+        // --- Execute Survival Command ---
+        if (msgText === ";s" || msgText === ";survival") {
+            // Bloxd.io API method to explicitly change an entity's gamemode
+            api.setPlayerGameMode(playerId, "survival");
+            
+            api.broadcastChatMessage({
+                content: [{ str: `⚙️ [SYSTEM]: ${username} switched to Survival mode.`, style: { color: COMMAND_COLOR, bold: IS_BOLD } }]
+            });
+        } 
+        
+        // --- Execute Creative Command ---
+        else if (msgText === ";c" || msgText === ";creative") {
+            // Bloxd.io API method to explicitly change an entity's gamemode
+            api.setPlayerGameMode(playerId, "creative");
+            
+            api.broadcastChatMessage({
+                content: [{ str: `⚙️ [SYSTEM]: ${username} switched to Creative mode.`, style: { color: COMMAND_COLOR, bold: IS_BOLD } }]
+            });
+        }
+    }
+});
+
