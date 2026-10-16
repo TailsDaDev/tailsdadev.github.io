@@ -255,6 +255,48 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  .gallery-box {
+    width: 100%;
+    max-width: 640px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #0b1f33;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    padding: 1.2rem;
+    overflow: auto;
+  }
+
+  .gallery-grid button {
+    padding: 0;
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    background: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .15s ease;
+  }
+
+  .gallery-grid button:hover,
+  .gallery-grid button:focus-visible {
+    transform: scale(1.04);
+  }
+
+  .gallery-grid img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
   .code-box pre {
     margin: 0;
     padding: 1.2rem;
@@ -294,7 +336,7 @@
         <a href="https://github.com/uhwhatamityping/" target="_blank" rel="noopener" aria-label="See GitHub">
           <img src="images/see-github.png" alt="See GitHub">
         </a>
-        <a href="#" aria-label="See codes">
+        <a href="#" id="seeCodesBtn" aria-label="See codes">
           <img src="images/see-codes.png" alt="See codes">
         </a>
       </div>
@@ -309,6 +351,21 @@
     <span class="music-label" id="musicLabel">Play music</span>
   </div>
   <audio id="bgMusic" src="song.mp3" loop></audio>
+
+  <div class="code-overlay" id="galleryOverlay">
+    <div class="gallery-box">
+      <div class="code-box-header">
+        <span>Select a project</span>
+        <button class="code-close" id="galleryClose" aria-label="Close" type="button">&#10005;</button>
+      </div>
+      <div class="gallery-grid">
+        <button type="button" data-code="codes/code1.txt"><img src="images/project1.png" alt="Project 1"></button>
+        <button type="button" data-code="codes/code2.txt"><img src="images/project2.png" alt="Project 2"></button>
+        <button type="button" data-code="codes/code3.txt"><img src="images/project3.png" alt="Project 3"></button>
+        <button type="button" data-code="codes/code4.txt"><img src="images/project4.png" alt="Project 4"></button>
+      </div>
+    </div>
+  </div>
 
   <div class="code-overlay" id="codeOverlay">
     <div class="code-box">
@@ -341,20 +398,23 @@
       }
     });
 
+    async function openCodeViewer(path, titleText) {
+      codeTitle.textContent = titleText;
+      codeContent.textContent = 'Loading...';
+      codeOverlay.classList.add('open');
+      try {
+        const res = await fetch(path);
+        if (!res.ok) throw new Error('not found');
+        codeContent.textContent = await res.text();
+      } catch (err) {
+        codeContent.textContent = 'Could not load ' + path + '. Make sure the file exists.';
+      }
+    }
+
     document.querySelectorAll('.project[data-code]').forEach((link, i) => {
-      link.addEventListener('click', async (e) => {
+      link.addEventListener('click', (e) => {
         e.preventDefault();
-        const path = link.getAttribute('data-code');
-        codeTitle.textContent = 'Project ' + (i + 1);
-        codeContent.textContent = 'Loading...';
-        codeOverlay.classList.add('open');
-        try {
-          const res = await fetch(path);
-          if (!res.ok) throw new Error('not found');
-          codeContent.textContent = await res.text();
-        } catch (err) {
-          codeContent.textContent = 'Could not load ' + path + '. Make sure the file exists.';
-        }
+        openCodeViewer(link.getAttribute('data-code'), 'Project ' + (i + 1));
       });
     });
 
@@ -364,6 +424,30 @@
     codeClose.addEventListener('click', closeCodeViewer);
     codeOverlay.addEventListener('click', (e) => {
       if (e.target === codeOverlay) closeCodeViewer();
+    });
+
+    const galleryOverlay = document.getElementById('galleryOverlay');
+    const galleryClose = document.getElementById('galleryClose');
+    const seeCodesBtn = document.getElementById('seeCodesBtn');
+
+    seeCodesBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      galleryOverlay.classList.add('open');
+    });
+
+    function closeGallery() {
+      galleryOverlay.classList.remove('open');
+    }
+    galleryClose.addEventListener('click', closeGallery);
+    galleryOverlay.addEventListener('click', (e) => {
+      if (e.target === galleryOverlay) closeGallery();
+    });
+
+    document.querySelectorAll('.gallery-grid button[data-code]').forEach((btn, i) => {
+      btn.addEventListener('click', () => {
+        closeGallery();
+        openCodeViewer(btn.getAttribute('data-code'), 'Project ' + (i + 1));
+      });
     });
 
     const audio = document.getElementById('bgMusic');
