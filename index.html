@@ -236,6 +236,25 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  .code-box-actions {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+  }
+
+  .code-copy {
+    border: none;
+    background: #fff;
+    color: var(--blue-deep);
+    padding: .4rem .9rem;
+    border-radius: 999px;
+    font-family: "VT323", monospace;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   .code-box pre {
     margin: 0;
     padding: 1.2rem;
@@ -295,7 +314,10 @@
     <div class="code-box">
       <div class="code-box-header">
         <span id="codeTitle">Code</span>
-        <button class="code-close" id="codeClose" aria-label="Close" type="button">&#10005;</button>
+        <div class="code-box-actions">
+          <button class="code-copy" id="codeCopy" type="button">Copy code</button>
+          <button class="code-close" id="codeClose" aria-label="Close" type="button">&#10005;</button>
+        </div>
       </div>
       <pre id="codeContent">Loading...</pre>
     </div>
@@ -306,6 +328,18 @@
     const codeContent = document.getElementById('codeContent');
     const codeTitle = document.getElementById('codeTitle');
     const codeClose = document.getElementById('codeClose');
+    const codeCopy = document.getElementById('codeCopy');
+
+    codeCopy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(codeContent.textContent);
+        const original = codeCopy.textContent;
+        codeCopy.textContent = 'Copied!';
+        setTimeout(() => { codeCopy.textContent = original; }, 1500);
+      } catch (err) {
+        codeCopy.textContent = 'Could not copy';
+      }
+    });
 
     document.querySelectorAll('.project[data-code]').forEach((link, i) => {
       link.addEventListener('click', async (e) => {
